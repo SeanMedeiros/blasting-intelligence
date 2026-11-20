@@ -232,3 +232,14 @@ def test_ensure_admin_on_new_database(tmp_path):
     assert con.execute("select username, full_name, role from app_user").fetchall() == [("boss", "Site Boss", "ADMIN")]
     r = _manage("ensure-admin", url=url)
     assert r.returncode == 0 and "already exist" in r.stdout
+
+
+def test_restore_script_drops_settings_unknown_to_the_server():
+    """Client tools newer than the server (pg_restore 17+ → PostgreSQL 16) write `SET transaction_timeout`."""
+    from app.ops.backup import filter_restore_script
+    script = [b"SET statement_timeout = 0;\n", b"SET transaction_timeout = 0;\n", b"CREATE TABLE t (a text);\n",
+              b"COPY public.t (a) FROM stdin;\n", b"SET transaction_timeout = 0;\n", b"\\.\n", b"SET lock_timeout = 0;\n"]
+    out = list(filter_restore_script(iter(script), {"statement_timeout", "lock_timeout"}))
+    assert b"SET transaction_timeout = 0;\n" in out[3:5]  # inside COPY data: kept as data
+    assert out.count(b"SET transaction_timeout = 0;\n") == 1 and out[0] == b"SET statement_timeout = 0;\n"
+    assert out[-1] == b"SET lock_timeout = 0;\n" and len(out) == 6

@@ -224,6 +224,52 @@ def resolve(name_or_path: str, dest_dir: Path | None = None) -> Path:
 
 
 # ----------------------------------------------------------------------------- restore
+_SET_LINE = re.compile(rb"^SET ([A-Za-z_.]+) = .*;\r?\n?$")
+
+
+def filter_restore_script(lines, server_params: set[str]):
+    """Drops session settings the server does not know (e.g. `SET transaction_timeout` written by PostgreSQL 17+
+    client tools, refused by a version 16 server). COPY data blocks are passed through untouched."""
+    in_copy = False
+    for line in lines:
+        if in_copy:
+            if line.rstrip(b"\r\n") == b"\\.":
+                in_copy = False
+            yield line
+            continue
+        if line.startswith(b"COPY ") and line.rstrip().endswith(b"FROM stdin;"):
+            in_copy = True
+        m = _SET_LINE.match(line)
+        if m and m.group(1).decode().lower() not in server_params:
+            continue
+        yield line
+
+
+def _pg_restore(payload: Path, server_params: set[str]) -> None:
+    """pg_restore → SQL script → psql, in one transaction. Works when the client tools are newer than the server."""
+    args, env = _pg_args(DATABASE_URL)
+    conn = [a for a in args if a != "-d"]
+    dbname = args[args.index("-d") + 1]
+    conn.remove(dbname)
+    dump = subprocess.Popen([_pg_tool("pg_restore"), "--clean", "--if-exists", "--no-owner", "-f", "-", str(payload)],
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+    load = subprocess.Popen([_pg_tool("psql"), *conn, "-d", dbname, "-X", "-q", "-v", "ON_ERROR_STOP=1", "--single-transaction",
+                             "-f", "-"], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, env=env)
+    try:
+        for line in filter_restore_script(dump.stdout, {p.lower() for p in server_params}):
+            load.stdin.write(line)
+        load.stdin.close()
+    except BrokenPipeError:
+        pass
+    dump_err = dump.stderr.read().decode(errors="replace")
+    load_err = load.stderr.read().decode(errors="replace")
+    if dump.wait() != 0:
+        load.kill()
+        raise BackupError(_('pg_restore failed: {v}', v=dump_err.strip()[:500]))
+    if load.wait() != 0:
+        raise BackupError(_('pg_restore failed: {v}', v=load_err.strip()[:500]))
+
+
 def restore_backup(path: Path) -> dict:
     """Replaces the current database (and imported surveys) with the backup. The server must be stopped."""
     man = verify_backup(path)
@@ -233,6 +279,10 @@ def restore_backup(path: Path) -> dict:
     safety = None
     if set(inspect(engine).get_table_names()) & {"blast", "app_user"}:
         safety = create_backup(reason="pre-restore")
+    server_params = None
+    if dialect != "sqlite":
+        with engine.connect() as c:
+            server_params = {row[0] for row in c.execute(text("SELECT name FROM pg_settings"))}
     engine.dispose()
     with zipfile.ZipFile(path) as z, tempfile.TemporaryDirectory(prefix="bi-restore-") as tmp:
         payload = Path(z.extract(man["payload"], tmp))
@@ -242,11 +292,7 @@ def restore_backup(path: Path) -> dict:
                 Path(str(target) + suffix).unlink(missing_ok=True)
             shutil.copyfile(payload, target)
         else:
-            args, env = _pg_args(DATABASE_URL)
-            r = subprocess.run([_pg_tool("pg_restore"), *args, "--clean", "--if-exists", "--no-owner", "--single-transaction",
-                                str(payload)], env=env, capture_output=True, text=True)
-            if r.returncode != 0:
-                raise BackupError(_('pg_restore failed: {v}', v=r.stderr.strip()[:500]))
+            _pg_restore(payload, server_params)
         for prefix, folder in FILE_DIRS.items():
             shutil.rmtree(folder, ignore_errors=True)
         for name in z.namelist():
