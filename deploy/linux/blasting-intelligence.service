@@ -1,0 +1,28 @@
+# systemd unit — Linux server (optional). Install:
+#   sudo useradd --system --home /opt/blasting-intelligence blasting
+#   sudo cp blasting-intelligence.service /etc/systemd/system/ && sudo systemctl daemon-reload
+#   sudo systemctl enable --now blasting-intelligence
+# Settings: /opt/blasting-intelligence/server.env (same keys as on Windows). Ports below 1024 need the capability line.
+[Unit]
+Description=Blasting Intelligence server
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+User=blasting
+Group=blasting
+WorkingDirectory=/opt/blasting-intelligence/backend
+ExecStart=/opt/blasting-intelligence/.venv/bin/python -m app.serve
+Restart=on-failure
+RestartSec=5
+# exit code 2 = settings refused: do not loop
+RestartPreventExitStatus=2
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/opt/blasting-intelligence/data
+
+[Install]
+WantedBy=multi-user.target
