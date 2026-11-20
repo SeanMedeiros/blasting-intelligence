@@ -72,8 +72,6 @@ jobs:
   backend-windows:
     name: Backend tests · Windows
     runs-on: windows-latest
-    # The target platform; kept informative until the first green run on a Windows runner (see docs/TESTING_REPORT.md).
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6

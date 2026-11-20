@@ -6,7 +6,7 @@
 | Build | v0.9.0 (`Blasting-Intelligence-v0.9.0.zip`) |
 | Data | Deterministic demonstration dataset "Lac-Boréal Mine (fictional)", demo date 2026-12-04 |
 | Test environment | Linux x86-64; Python 3.13 (development) and **Python 3.11 clean virtual environment** (minimum supported); **SQLite and PostgreSQL 16**; Chromium (Playwright) with SwiftShader WebGL |
-| Not yet tested | Windows target workstation and server. Action: run `setup.bat` (includes the backend tests) and `e2e/smoke.py`; on the server `install_service.bat` and the acceptance check of DEPLOYMENT.md §8. The PowerShell service script was parsed and its helper functions (settings, health probe, exit codes) exercised with PowerShell 7.4 on Linux; the Task Scheduler / firewall / icacls calls themselves could not be run here. |
+| Not yet tested | The site's own Windows workstation and server (the automated suite passes on GitHub's Windows runner). Action: run `setup.bat` (includes the backend tests) and `e2e/smoke.py`; on the server `install_service.bat` and the acceptance check of DEPLOYMENT.md §8. The PowerShell service script was parsed and its helper functions (settings, health probe, exit codes) exercised with PowerShell 7.4 on Linux; the Task Scheduler / firewall / icacls calls themselves could not be run here. |
 
 ## 1. Summary
 
@@ -22,7 +22,7 @@
 | Migrations 0001 → 0002 → 0003 on a populated PostgreSQL database | Passed — pre-migration backup taken at each step, data kept |
 | Restore on PostgreSQL (CLI) | Passed — refused without `--yes`; safety backup taken; row added after the backup removed; migrations re-applied |
 | Clean install from the package (fresh venv, Python 3.11) | Passed — data generated, tests passed, UI and PDF served |
-| Continuous integration (GitHub Actions, `.github/workflows/ci.yml`) | Defined: pytest on Python 3.11–3.13 (SQLite), PostgreSQL 16, Windows (informative until its first green run), frontend type check and build, both end-to-end suites (production over HTTPS). Workflow validated with actionlint; first run happens on the first push. |
+| Continuous integration (GitHub Actions, `.github/workflows/ci.yml`) | **All 7 jobs green**: pytest on Python 3.11–3.13 (SQLite), PostgreSQL 16, **Windows (windows-latest: full backend suite, launcher check, service script parse and status)**, frontend type check and build, both end-to-end suites (production over HTTPS). The first run found a real defect, fixed (see §5). |
 | Offline capability | Passed — no request left the local server during the E2E run |
 | Visual inspection | All 13 modules, modals and the 8 PDF reports reviewed from screenshots / rendered pages (French monthly KPI and daily reports rendered and checked in v0.8.0); defects found were fixed (see §5) |
 
@@ -70,6 +70,7 @@ Run: demonstration server (`start_demo.bat`, port 8001) after `reset_demo.bat` �
 
 | Defect | Fix |
 |---|---|
+| **v0.9.0 (first CI run):** restore failed when the PostgreSQL client tools were newer than the server (pg_restore 17+ writes `SET transaction_timeout`, refused by PostgreSQL 16) | Restore goes through a SQL script that drops settings unknown to the server; unit test added |
 | **v0.9.0:** `X-Forwarded-For` / `X-Forwarded-Proto` were trusted from 127.0.0.1 by default (uvicorn default), so a local process could spoof the client address | Forwarded headers honoured only from `BI_TRUSTED_PROXIES` |
 | **v0.9.0:** `BI_COOKIE_SECURE` had to be set by hand when serving HTTPS | Automatic with built-in HTTPS |
 | **v0.8.0:** After switching language, a request still in flight from the first page load was reused, so server texts could stay in the previous language | In-flight requests cancelled, then everything refetched; KPI dialogs follow the refreshed data |
