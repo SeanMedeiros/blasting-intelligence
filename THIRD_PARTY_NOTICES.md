@@ -22,8 +22,8 @@ The pre-built interface (`frontend/dist`) bundles the open-source packages below
 | @remix-run/router | 1.23.4 | MIT |
 | @standard-schema/spec | 1.1.0 | MIT |
 | @standard-schema/utils | 0.3.0 | MIT |
-| @tanstack/query-core | 5.107.1 | MIT |
-| @tanstack/react-query | 5.107.1 | MIT |
+| @tanstack/query-core | 5.108.0 | MIT |
+| @tanstack/react-query | 5.108.0 | MIT |
 | @tweenjs/tween.js | 23.1.3 | MIT |
 | @types/d3-array | 3.2.2 | MIT |
 | @types/d3-color | 3.1.3 | MIT |
@@ -73,7 +73,7 @@ The pre-built interface (`frontend/dist`) bundles the open-source packages below
 | glsl-noise | 0.0.0 | MIT |
 | hls.js | 1.7.4 | Apache-2.0 |
 | html-parse-stringify | 4.0.1 | MIT |
-| i18next | 27.1.1 | MIT |
+| i18next | 27.1.5 | MIT |
 | ieee754 | 1.2.1 | BSD-3-Clause |
 | immediate | 3.0.6 | MIT |
 | immer | 11.2.10 | MIT |
@@ -85,7 +85,7 @@ The pre-built interface (`frontend/dist`) bundles the open-source packages below
 | js-tokens | 4.0.0 | MIT |
 | lie | 3.3.0 | MIT |
 | loose-envify | 1.4.0 | MIT |
-| lucide-react | 1.72.0 | ISC |
+| lucide-react | 1.74.0 | ISC |
 | maath | 0.10.8 | MIT |
 | meshline | 3.3.1 | MIT |
 | meshoptimizer | 1.1.1 | MIT |
@@ -98,7 +98,7 @@ The pre-built interface (`frontend/dist`) bundles the open-source packages below
 | react | 18.3.1 | MIT |
 | react-composer | 5.0.3 | MIT |
 | react-dom | 18.3.1 | MIT |
-| react-i18next | 18.0.1 | MIT |
+| react-i18next | 18.0.2 | MIT |
 | react-is | 19.3.1 | MIT |
 | react-reconciler | 0.27.0 | MIT |
 | scheduler | 0.21.0 | MIT |
@@ -106,7 +106,7 @@ The pre-built interface (`frontend/dist`) bundles the open-source packages below
 | react-router | 6.30.6 | MIT |
 | react-router-dom | 6.30.6 | MIT |
 | react-use-measure | 2.1.7 | MIT |
-| recharts | 3.10.1 | MIT |
+| recharts | 3.11.0 | MIT |
 | redux | 5.0.1 | MIT |
 | redux-thunk | 3.1.0 | MIT |
 | require-from-string | 2.0.2 | MIT |
