@@ -1,14 +1,22 @@
 version: 2
 updates:
+  # backend/requirements.txt holds minimum versions (>=): propose a change only when a new release falls
+  # outside the range, not to raise the minimum (which would drop support for older Python versions).
   - package-ecosystem: pip
     directory: /backend
     schedule: { interval: monthly }
+    versioning-strategy: increase-if-necessary
+  # frontend/dist is committed (users need no Node.js): every update needs a rebuild and the end-to-end run.
+  # Minor and patch updates are grouped; major versions (React, router, TypeScript…) are migrated deliberately.
   - package-ecosystem: npm
     directory: /frontend
     schedule: { interval: monthly }
     groups:
-      frontend:
-        patterns: ["*"]
+      frontend-minor-patch:
+        update-types: ["minor", "patch"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: monthly }
