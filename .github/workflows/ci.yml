@@ -22,7 +22,7 @@ jobs:
       matrix:
         python: ["3.11", "3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python }}
@@ -56,7 +56,7 @@ jobs:
       BI_TEST_DATABASE_URL: postgresql+psycopg://bi:bi-test-pass@127.0.0.1:5432/bi_test
       BI_TEST_PG_URL: postgresql+psycopg://bi:bi-test-pass@127.0.0.1:5432/bi_copy_test
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
@@ -73,7 +73,7 @@ jobs:
     name: Backend tests · Windows
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
@@ -101,7 +101,7 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version: 22
@@ -116,7 +116,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [backend-sqlite, frontend]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
